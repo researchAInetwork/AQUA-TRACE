@@ -59,25 +59,24 @@ async function getGeoLocation(): Promise<{ latitude: number; longitude: number }
 }
 
 export async function analyzeWaterImage(file: File, context: string): Promise<{ report: AnalysisReport; sources: GroundingSource[] }> {
-  // Always initialize fresh to ensure latest context/key
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const base64Data = await fileToBase64(file);
   const mimeType = file.type;
   const location = await getGeoLocation();
 
   const prompt = `
-    Analyze this imagery of a water body for potential environmental pollution. 
-    ${context ? `User provided context: ${context}` : ''}
+    Act as a senior environmental forensic scientist. Perform a high-resolution analysis of this surface water data.
+    ${context ? `Site Metadata: ${context}` : ''}
     
-    If available, identify:
-    1. Visible indicators (discoloration, foam, debris, oil sheen, dead wildlife).
-    2. Likely category (Industrial, Agricultural runoff, Urban sewage, Natural algae).
-    3. Potential ecological impact and human health risks.
-    4. Immediate recommendations for the user.
+    Examine visual evidence for:
+    1. Chemical signatures (oil sheens, iridescent films, inorganic discoloration).
+    2. Organic markers (algal blooms, eutrophication foam, suspended solids).
+    3. Structural indicators (outfalls, suspicious runoff channels, waste debris).
+    
+    Provide an informative and descriptive analysis using the structured format below.
+    Specifically include a 'Biology Impact Matrix' and a 'Risk Factor Justification'.
 
-    Also, find nearby environmental testing labs or water authorities using the provided location.
-
-    CRITICAL: You must return the analysis as a valid JSON object matching the following structure:
+    CRITICAL: You must return the analysis as a valid JSON object matching this structure:
     {
       "observedIndicators": ["string"],
       "likelyPollutionCategory": "string",
@@ -91,7 +90,6 @@ export async function analyzeWaterImage(file: File, context: string): Promise<{ 
     }
   `;
 
-  // MUST use gemini-2.5-flash for Maps grounding support as per guidelines
   const response = await ai.models.generateContent({
     model: 'gemini-2.5-flash',
     contents: {
@@ -119,23 +117,15 @@ export async function analyzeWaterImage(file: File, context: string): Promise<{ 
   });
 
   const text = response.text || '';
-  
   const jsonMatch = text.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) {
-    throw new Error("Failed to parse analysis report from model response.");
-  }
-
+  if (!jsonMatch) throw new Error("Scientific synthesis failed. Please provide clearer visual data.");
   const report: AnalysisReport = JSON.parse(jsonMatch[0]);
   
   const sources: GroundingSource[] = [];
   const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
-  
   for (const chunk of groundingChunks) {
-    if (chunk.web) {
-      sources.push({ title: chunk.web.title, uri: chunk.web.uri });
-    } else if (chunk.maps) {
-      sources.push({ title: chunk.maps.title, uri: chunk.maps.uri });
-    }
+    if (chunk.web) sources.push({ title: chunk.web.title, uri: chunk.web.uri });
+    else if (chunk.maps) sources.push({ title: chunk.maps.title, uri: chunk.maps.uri });
   }
 
   return { report, sources };
@@ -144,11 +134,13 @@ export async function analyzeWaterImage(file: File, context: string): Promise<{ 
 export async function generateAudioReport(report: AnalysisReport): Promise<string> {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const prompt = `
-    Summarize this water quality report for an environmental inspector. Be professional and urgent if risk is high.
-    Category: ${report.likelyPollutionCategory}.
-    Risk: ${report.environmentalRiskLevel}.
-    Impact: ${report.environmentalImpactExplanation}.
-    Recommendations: ${report.recommendedImmediateActions.join(', ')}.
+    Professional Audio Briefing:
+    Summarize the environmental findings for a field officer.
+    Findings: ${report.likelyPollutionCategory}.
+    Risk Index: ${report.environmentalRiskLevel}.
+    Key Justification: ${report.riskJustification}.
+    Critical Actions: ${report.recommendedImmediateActions.join(', ')}.
+    Note: Maintain a formal and informative tone.
   `;
 
   const response = await ai.models.generateContent({
