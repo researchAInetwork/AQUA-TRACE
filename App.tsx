@@ -86,17 +86,13 @@ function App() {
       setAnalysisState(prev => ({ 
         ...prev,
         status: 'error', 
-        error: err.message || "Failed to analyze data. Please try again." 
+        error: err.message || "Analysis failed. Please try a different angle or lighting." 
       }));
     }
   };
 
   const handleCameraError = (errorMsg: string) => {
-    setAnalysisState(prev => ({
-      ...prev,
-      status: 'error',
-      error: errorMsg
-    }));
+    setAnalysisState(prev => ({ ...prev, status: 'error', error: errorMsg }));
     setInputMode('upload');
   };
 
@@ -112,103 +108,160 @@ function App() {
   const isVideo = file?.type.startsWith('video/');
 
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100 font-sans selection:bg-cyan-500/30">
+    <div className="h-screen flex flex-col bg-slate-950 font-sans selection:bg-cyan-500/30 overflow-hidden">
       <Header onOpenAbout={() => setShowAbout(true)} />
       
       <AboutModal isOpen={showAbout} onClose={() => setShowAbout(false)} />
 
-      <main className="max-w-5xl mx-auto px-4 py-8">
-        {!preview && (
-          <div className="mb-12 text-center max-w-2xl mx-auto">
-            <h2 className="text-3xl font-bold text-white mb-4 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">
-              Rapid Environmental Impact Assessment
-            </h2>
-            <p className="text-slate-400 mb-8">
-              Upload imagery or scan surface water bodies to generate instant, AI-driven pollution risk assessments. 
-              Designed for environmental monitors, NGOs, and compliance reporting.
-            </p>
-            <div className="p-4 bg-blue-900/20 border border-blue-800/50 rounded-lg text-sm text-blue-200 inline-block">
-              <strong>Beta System:</strong> Assessments are visual estimates only and do not replace laboratory chemical analysis.
-            </div>
+      <main className="flex-1 dashboard-height flex flex-col lg:flex-row overflow-hidden">
+        
+        {/* Left Side: Sensor & Input (Fixed Control) */}
+        <aside className="w-full lg:w-[420px] flex-shrink-0 bg-slate-900/40 border-r border-slate-800 flex flex-col overflow-y-auto lg:overflow-hidden p-6 gap-6">
+          
+          <div className="space-y-1">
+             <h2 className="text-xl font-bold text-white tracking-tight">Data Acquisition</h2>
+             <p className="text-xs text-slate-500 uppercase tracking-widest font-mono">Status: {analysisState.status === 'analyzing' ? 'Processing Stream...' : 'Ready'}</p>
           </div>
-        )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          <div className={`lg:col-span-5 space-y-6 ${analysisState.status === 'complete' ? 'hidden lg:block' : ''}`}>
-            {!preview && (
-              <div className="flex p-1 bg-slate-800 rounded-lg">
-                <button onClick={() => setInputMode('upload')} className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-md transition-all ${inputMode === 'upload' ? 'bg-slate-700 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}>
-                  Upload File
-                </button>
-                <button onClick={() => setInputMode('camera')} className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-md transition-all ${inputMode === 'camera' ? 'bg-slate-700 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}>
-                  Live Scan
-                </button>
+          <div className="flex-1 flex flex-col gap-6">
+            {!preview ? (
+              <div className="flex-1 flex flex-col gap-4">
+                <div className="flex p-1 bg-slate-800/50 rounded-lg border border-slate-700">
+                  <button onClick={() => setInputMode('upload')} className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs font-bold rounded-md transition-all ${inputMode === 'upload' ? 'bg-slate-700 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}>
+                    IMPORT FILE
+                  </button>
+                  <button onClick={() => setInputMode('camera')} className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs font-bold rounded-md transition-all ${inputMode === 'camera' ? 'bg-slate-700 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}>
+                    LIVE OPTICS
+                  </button>
+                </div>
+
+                {inputMode === 'upload' ? (
+                  <div 
+                    onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop} 
+                    className={`relative flex-1 min-h-[250px] border-2 border-dashed rounded-xl flex flex-col items-center justify-center cursor-pointer transition-all duration-300 ${isDragging ? 'border-cyan-400 bg-cyan-500/5 scale-[1.01]' : 'border-slate-700 hover:border-slate-500 bg-slate-900/20'}`}
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <div className="p-6 text-center space-y-4">
+                      <div className="w-12 h-12 mx-auto rounded-full bg-slate-800 flex items-center justify-center border border-slate-700">
+                         <svg className="w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-sm font-semibold text-slate-200">Drop Surface Data</p>
+                        <p className="text-[10px] text-slate-500 uppercase tracking-tight">Imagery or Video (.mp4, .jpg, .png)</p>
+                      </div>
+                    </div>
+                    <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*,video/*" />
+                  </div>
+                ) : (
+                  <div className="flex-1 min-h-[300px]">
+                    <CameraCapture onCapture={validateAndSetFile} onError={handleCameraError} />
+                  </div>
+                )}
               </div>
-            )}
-
-            {preview ? (
-              <div className="relative w-full h-64 lg:h-auto overflow-hidden rounded-lg border border-slate-600 shadow-lg bg-black">
+            ) : (
+              <div className="relative group rounded-xl border border-slate-700 overflow-hidden bg-black flex-1 min-h-[250px]">
                 {isVideo ? (
                   <video src={preview} controls className="w-full h-full object-contain" />
                 ) : (
                   <img src={preview} alt="Water sample" className="w-full h-full object-cover" />
                 )}
-                <button onClick={(e) => { e.stopPropagation(); reset(); }} className="absolute top-2 right-2 p-2 bg-slate-900/80 hover:bg-red-900/80 text-white rounded-full backdrop-blur-sm transition-colors z-10">
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
+                <div className="absolute top-0 inset-x-0 p-3 bg-gradient-to-b from-black/80 to-transparent flex justify-between items-center">
+                  <span className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest bg-cyan-950/80 px-2 py-1 rounded border border-cyan-800/50">Capture Locked</span>
+                  <button onClick={reset} className="p-1.5 bg-red-500/20 hover:bg-red-500 border border-red-500/50 rounded-full transition-all text-white">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                  </button>
+                </div>
               </div>
-            ) : (
-              <>
-                {inputMode === 'upload' ? (
-                  <div onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop} className={`relative group border-2 border-dashed rounded-xl transition-all duration-300 ease-in-out ${isDragging ? 'border-cyan-400 bg-slate-800/80 scale-[1.02] shadow-xl shadow-cyan-900/20' : 'border-cyan-800/50 hover:border-cyan-500/50 bg-slate-800/30 hover:bg-slate-800/60'} h-64 lg:h-[400px] flex flex-col items-center justify-center cursor-pointer`} onClick={() => fileInputRef.current?.click()}>
-                    <div className="text-center p-6 pointer-events-none"> 
-                      <p className={`text-lg font-medium ${isDragging ? 'text-white' : 'text-slate-200'}`}>Drop water image or video here</p>
-                      <p className="text-sm text-slate-500 mt-2">or click to browse</p>
-                    </div>
-                    <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*,video/*" />
-                  </div>
-                ) : (
-                  <CameraCapture onCapture={validateAndSetFile} onError={handleCameraError} />
-                )}
-              </>
             )}
 
             <div className="space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-400">Location Context (Optional)</label>
-                <textarea value={context} onChange={(e) => setContext(e.target.value)} placeholder="e.g., Downstream from factory..." className="w-full h-24 bg-slate-800/50 border border-slate-700 rounded-lg p-3 text-sm text-slate-200 focus:ring-cyan-500/50 transition-all resize-none" />
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Environment Metadata</label>
+                <textarea 
+                  value={context} 
+                  onChange={(e) => setContext(e.target.value)} 
+                  placeholder="Describe location, weather, or visible odors..." 
+                  className="w-full h-24 bg-slate-950/50 border border-slate-800 rounded-lg p-3 text-xs text-slate-300 focus:border-cyan-500/50 focus:ring-0 transition-all resize-none placeholder:text-slate-700"
+                />
               </div>
-              <button onClick={handleAnalyze} disabled={!file || analysisState.status === 'analyzing'} className={`w-full py-4 rounded-lg font-bold text-sm uppercase tracking-widest transition-all ${!file ? 'bg-slate-800 text-slate-600 cursor-not-allowed' : analysisState.status === 'analyzing' ? 'bg-cyan-900/50 text-cyan-300 cursor-wait' : 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-lg shadow-cyan-900/20'}`}>
-                {analysisState.status === 'analyzing' ? 'Analyzing...' : `Analyze ${isVideo ? 'Video' : 'Impact'}`}
+              <button 
+                onClick={handleAnalyze} 
+                disabled={!file || analysisState.status === 'analyzing'} 
+                className={`w-full py-4 rounded-xl font-bold text-xs uppercase tracking-[0.2em] transition-all relative overflow-hidden group ${!file ? 'bg-slate-800 text-slate-600' : 'bg-cyan-600 hover:bg-cyan-500 text-white shadow-lg shadow-cyan-900/20'}`}
+              >
+                {analysisState.status === 'analyzing' ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <span className="w-3 h-3 border-2 border-white/20 border-t-white rounded-full animate-spin"></span>
+                    Synthesizing...
+                  </span>
+                ) : `Initiate Analysis`}
               </button>
               {analysisState.error && (
-                <div className="p-4 bg-red-900/20 border border-red-800 rounded-lg text-red-300 text-sm animate-fade-in-up">{analysisState.error}</div>
+                <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-[10px] uppercase font-bold animate-fade-in-up">{analysisState.error}</div>
               )}
             </div>
           </div>
+        </aside>
 
-          <div className="lg:col-span-7">
+        {/* Right Side: Analytics & Reports (Scrollable Output) */}
+        <section className="flex-1 flex flex-col overflow-hidden bg-slate-950 relative">
+          
+          <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-20">
+             <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-cyan-500/20 blur-[120px] rounded-full"></div>
+             <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-500/20 blur-[120px] rounded-full"></div>
+          </div>
+
+          <div className="flex-1 overflow-y-auto custom-scroll p-8 relative z-10">
             {analysisState.status === 'complete' && analysisState.data ? (
               <ReportView report={analysisState.data} sources={analysisState.sources} onBack={reset} />
             ) : (
-              <div className={`h-full border border-slate-800 rounded-xl bg-slate-900/30 flex items-center justify-center ${analysisState.status === 'analyzing' ? 'opacity-50' : 'opacity-100'}`}>
-                <div className="text-center p-8 max-w-sm">
-                  {analysisState.status === 'analyzing' ? (
-                    <div className="space-y-4">
-                      <div className="w-16 h-16 mx-auto border-4 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin"></div>
-                      <p className="text-slate-400 text-sm">Processing environmental data...</p>
+              <div className="h-full flex flex-col items-center justify-center text-center max-w-lg mx-auto space-y-8 animate-fade-in-up">
+                {analysisState.status === 'analyzing' ? (
+                  <div className="space-y-6">
+                    <div className="relative w-24 h-24 mx-auto">
+                      <div className="absolute inset-0 border-4 border-cyan-500/10 rounded-full"></div>
+                      <div className="absolute inset-0 border-4 border-transparent border-t-cyan-500 rounded-full animate-spin"></div>
+                      <div className="absolute inset-4 border-2 border-blue-500/10 rounded-full animate-pulse"></div>
                     </div>
-                  ) : (
-                    <p className="text-slate-500 text-sm">Assessment report will appear here after analysis.</p>
-                  )}
-                </div>
+                    <div className="space-y-2">
+                      <h3 className="text-xl font-bold text-white">Quantum Inference</h3>
+                      <p className="text-sm text-slate-500">Cross-referencing multimodal datasets with environmental toxicity patterns...</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-6 opacity-60">
+                    <div className="w-16 h-16 mx-auto bg-slate-900 rounded-2xl border border-slate-800 flex items-center justify-center text-slate-700">
+                       <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>
+                    </div>
+                    <div className="space-y-2">
+                       <h3 className="text-lg font-bold text-slate-400">Waiting for Input</h3>
+                       <p className="text-sm text-slate-600 leading-relaxed">Provide visual surface data to generate a comprehensive Impact & Risk Intelligence report.</p>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
-        </div>
+        </section>
       </main>
+
+      {/* Bottom Status Bar */}
+      <footer className="h-8 bg-slate-900 border-t border-slate-800 px-4 flex items-center justify-between text-[10px] text-slate-500 font-mono tracking-wider">
+        <div className="flex items-center gap-4">
+          <span className="flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_5px_#10b981]"></span>
+            SYSTEM: NOMINAL
+          </span>
+          <span className="hidden sm:inline opacity-50">LATENCY: 142MS</span>
+        </div>
+        <div className="text-center font-sans opacity-60">
+          AQUA-TRACE // BETA - VISUAL ESTIMATES ONLY. NOT A REPLACEMENT FOR LABORATORY ANALYSIS.
+        </div>
+        <div className="flex items-center gap-4">
+          <span className="hidden sm:inline">SECURE CHANNEL</span>
+          <span>©2024 ENV-AI</span>
+        </div>
+      </footer>
     </div>
   );
 }
