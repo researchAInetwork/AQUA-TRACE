@@ -32,69 +32,49 @@
       }
     </script>
     <style>
-      :root {
-        --header-height: 4rem;
-        --footer-height: 2rem;
-      }
       body {
         background-color: #020617; /* Slate 950 */
         color: #f8fafc;
-        overflow: hidden; /* Prevent body scroll for dashboard feel */
-      }
-      @media (max-width: 1024px) {
-        body { overflow: auto; }
+        margin: 0;
+        padding: 0;
+        overflow: hidden; /* Strict viewport lock */
       }
       
-      .dashboard-height {
-        height: calc(100vh - var(--header-height) - var(--footer-height));
-      }
-
-      /* Custom scrollbar for analytics panel */
+      /* Only allow scrolling within designated panels */
       .custom-scroll::-webkit-scrollbar {
-        width: 6px;
+        width: 5px;
       }
       .custom-scroll::-webkit-scrollbar-track {
-        background: rgba(15, 23, 42, 0.5); 
+        background: rgba(15, 23, 42, 0.2); 
       }
       .custom-scroll::-webkit-scrollbar-thumb {
-        background: #334155; 
+        background: #1e293b; 
         border-radius: 10px;
       }
       .custom-scroll::-webkit-scrollbar-thumb:hover {
-        background: #475569; 
+        background: #334155; 
       }
       
       @keyframes fadeInUp {
-        from { opacity: 0; transform: translateY(15px); }
+        from { opacity: 0; transform: translateY(10px); }
         to { opacity: 1; transform: translateY(0); }
       }
       .animate-fade-in-up {
-        animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
       }
 
-      @keyframes scan {
-        0% { top: 0%; opacity: 0; }
-        10% { opacity: 1; }
-        90% { opacity: 1; }
-        100% { top: 100%; opacity: 0; }
-      }
-      .animate-scan {
-        animation: scan 4s linear infinite;
-        background: linear-gradient(to bottom, transparent, rgba(34, 211, 238, 0.4), transparent);
-        height: 2px;
-        width: 100%;
-        position: absolute;
-        z-index: 10;
+      .glass-panel {
+        background: rgba(15, 23, 42, 0.4);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(51, 65, 85, 0.3);
       }
 
-      .glass {
-        background: rgba(15, 23, 42, 0.6);
-        backdrop-filter: blur(12px);
-        border: 1px solid rgba(51, 65, 85, 0.5);
+      @keyframes pulse-cyan {
+        0%, 100% { box-shadow: 0 0 15px -5px rgba(6, 182, 212, 0.2); }
+        50% { box-shadow: 0 0 25px -2px rgba(6, 182, 212, 0.4); }
       }
-      
-      .glow-cyan {
-        box-shadow: 0 0 20px -5px rgba(6, 182, 212, 0.2);
+      .glow-cyan-pulse {
+        animation: pulse-cyan 3s infinite ease-in-out;
       }
     </style>
     <script type="importmap">
