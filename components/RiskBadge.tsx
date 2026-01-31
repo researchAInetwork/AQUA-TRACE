@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { RiskLevel } from '../types.ts';
+import { RiskLevel } from '../types';
 
 interface RiskBadgeProps {
   level: RiskLevel;

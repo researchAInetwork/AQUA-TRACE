@@ -1,11 +1,10 @@
-
 import React, { useState, useRef } from 'react';
-import { Header } from './components/Header.tsx';
-import { ReportView } from './components/ReportView.tsx';
-import { CameraCapture } from './components/CameraCapture.tsx';
-import { AboutModal } from './components/AboutModal.tsx';
-import { analyzeWaterImage } from './services/geminiService.ts';
-import { AnalysisState } from './types.ts';
+import { Header } from './components/Header';
+import { ReportView } from './components/ReportView';
+import { CameraCapture } from './components/CameraCapture';
+import { AboutModal } from './components/AboutModal';
+import { analyzeWaterImage } from './services/geminiService';
+import { AnalysisState } from './types';
 
 type InputMode = 'upload' | 'camera';
 

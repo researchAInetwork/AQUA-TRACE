@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { ConfidenceLevel } from '../types.ts';
+import { ConfidenceLevel } from '../types';
 
 interface ConfidenceBadgeProps {
   level: ConfidenceLevel;

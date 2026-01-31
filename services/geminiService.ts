@@ -1,6 +1,5 @@
-
 import { GoogleGenAI, Type, Modality } from "@google/genai";
-import { AnalysisReport, GroundingSource, RiskLevel, ConfidenceLevel } from "../types.ts";
+import { AnalysisReport, GroundingSource, RiskLevel, ConfidenceLevel } from "../types";
 
 // Helper to convert File to Base64
 const fileToBase64 = (file: File): Promise<string> => {
@@ -92,7 +91,7 @@ export async function analyzeWaterImage(file: File, context: string): Promise<{ 
     }
   `;
 
-  // MUST use gemini-2.5-flash for Maps grounding support
+  // MUST use gemini-2.5-flash for Maps grounding support as per guidelines
   const response = await ai.models.generateContent({
     model: 'gemini-2.5-flash',
     contents: {
@@ -121,7 +120,6 @@ export async function analyzeWaterImage(file: File, context: string): Promise<{ 
 
   const text = response.text || '';
   
-  // Extract JSON from response text
   const jsonMatch = text.match(/\{[\s\S]*\}/);
   if (!jsonMatch) {
     throw new Error("Failed to parse analysis report from model response.");
@@ -129,7 +127,6 @@ export async function analyzeWaterImage(file: File, context: string): Promise<{ 
 
   const report: AnalysisReport = JSON.parse(jsonMatch[0]);
   
-  // Extract Grounding Sources
   const sources: GroundingSource[] = [];
   const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
   
