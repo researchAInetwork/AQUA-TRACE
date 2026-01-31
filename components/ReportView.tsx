@@ -1,9 +1,9 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { AnalysisReport, GroundingSource } from '../types';
-import { RiskBadge } from './RiskBadge';
-import { ConfidenceBadge } from './ConfidenceBadge';
-import { generateAudioReport, decodeBase64, decodeAudioData } from '../services/geminiService';
+import { AnalysisReport, GroundingSource } from '../types.ts';
+import { RiskBadge } from './RiskBadge.tsx';
+import { ConfidenceBadge } from './ConfidenceBadge.tsx';
+import { generateAudioReport, decodeBase64, decodeAudioData } from '../services/geminiService.ts';
 
 interface ReportViewProps {
   report: AnalysisReport;

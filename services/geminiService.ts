@@ -1,8 +1,6 @@
 
 import { GoogleGenAI, Type, Modality } from "@google/genai";
-import { AnalysisReport, GroundingSource, RiskLevel, ConfidenceLevel } from "../types";
-
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+import { AnalysisReport, GroundingSource, RiskLevel, ConfidenceLevel } from "../types.ts";
 
 // Helper to convert File to Base64
 const fileToBase64 = (file: File): Promise<string> => {
@@ -62,6 +60,8 @@ async function getGeoLocation(): Promise<{ latitude: number; longitude: number }
 }
 
 export async function analyzeWaterImage(file: File, context: string): Promise<{ report: AnalysisReport; sources: GroundingSource[] }> {
+  // Always initialize fresh to ensure latest context/key
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const base64Data = await fileToBase64(file);
   const mimeType = file.type;
   const location = await getGeoLocation();
@@ -92,8 +92,9 @@ export async function analyzeWaterImage(file: File, context: string): Promise<{ 
     }
   `;
 
+  // MUST use gemini-2.5-flash for Maps grounding support
   const response = await ai.models.generateContent({
-    model: 'gemini-3-pro-preview',
+    model: 'gemini-2.5-flash',
     contents: {
       parts: [
         { inlineData: { data: base64Data, mimeType } },
@@ -144,6 +145,7 @@ export async function analyzeWaterImage(file: File, context: string): Promise<{ 
 }
 
 export async function generateAudioReport(report: AnalysisReport): Promise<string> {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const prompt = `
     Summarize this water quality report for an environmental inspector. Be professional and urgent if risk is high.
     Category: ${report.likelyPollutionCategory}.

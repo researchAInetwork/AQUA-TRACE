@@ -1,11 +1,11 @@
 
 import React, { useState, useRef } from 'react';
-import { Header } from './components/Header';
-import { ReportView } from './components/ReportView';
-import { CameraCapture } from './components/CameraCapture';
-import { AboutModal } from './components/AboutModal';
-import { analyzeWaterImage } from './services/geminiService';
-import { AnalysisState } from './types';
+import { Header } from './components/Header.tsx';
+import { ReportView } from './components/ReportView.tsx';
+import { CameraCapture } from './components/CameraCapture.tsx';
+import { AboutModal } from './components/AboutModal.tsx';
+import { analyzeWaterImage } from './services/geminiService.ts';
+import { AnalysisState } from './types.ts';
 
 type InputMode = 'upload' | 'camera';
 
@@ -121,7 +121,7 @@ function App() {
       <main className="max-w-5xl mx-auto px-4 py-8">
         {!preview && (
           <div className="mb-12 text-center max-w-2xl mx-auto">
-            <h2 className="text-3xl font-bold text-white mb-4">
+            <h2 className="text-3xl font-bold text-white mb-4 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">
               Rapid Environmental Impact Assessment
             </h2>
             <p className="text-slate-400 mb-8">
