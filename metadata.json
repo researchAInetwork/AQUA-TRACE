@@ -1,0 +1,8 @@
+{
+  "name": "AQUA-TRACE",
+  "description": "AI-Driven Water Pollution Impact & Risk Intelligence System using Gemini 3.",
+  "requestFramePermissions": [
+    "camera",
+    "geolocation"
+  ]
+}
